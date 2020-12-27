@@ -1,0 +1,157 @@
+<html>
+    <head>
+        <style>
+            body {background-color: powderblue; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+            #header { position:absolute; left:8px;right:8px; height:32px;top:8px; border-style:groove; }
+            #messages { position:absolute; left:8px;right:8px; top:48px; bottom:48px; border-style:groove; overflow-y: scroll;}
+            #footer {  position:absolute; left:8px;right:8px; height:32px; bottom:8px; border-style:groove;}
+
+            #messages .message {background-color: lightyellow;}
+            #messages .message .actor { font-weight:bold;}
+            #messages .message .content {font-style:italic;}
+
+        </style>
+        <script>
+            function log( actor, content)  {
+                var messages = document.getElementById('messages');
+                var divMessage = document.createElement('div');
+                divMessage.className='message';
+                var divActor = document.createElement('span');
+                divActor.className='actor';
+                divActor.innerText = actor + ': ';
+                var divContent = document.createElement('span');
+                divContent.className='content';
+                divContent.innerText = content;
+                divMessage.appendChild(divActor);
+                divMessage.appendChild(divContent);
+                // messages.insertBefore(divMessage, messages.childNodes[0]); 
+                messages.appendChild(divMessage);
+            }
+
+            var socket;
+
+            function onWSConnected(event) {
+                log("Info", "Connected");
+            }
+            function onWSClose(event) {
+                log("Info", "Connection Closed");
+            }
+
+            function handleYouMessage(msg) {
+                document.getElementById('textUsername').innerText = msg.user.playerName;
+                log("Info", 'Logged in as ' + msg.user.playerName);
+                if( msg.users.length == 1 ) {
+                    log("Info","You are alone");
+                } else { 
+                    log("Info", 'Users : ' + msg.users.map( x=> x.playerName).join(', '));
+                }
+
+            }
+
+            function onWSMessage(event) {
+                try {
+                        var message = JSON.parse(event.data);
+                    } catch( e ) {
+                        log('Error', e.toString() + ' parsing ' + event.data);
+                        return;
+                    }
+
+                    var type = message.type;
+                    switch( type ) {
+                        case 'join':
+                            log( 'Server', message.user.playerName + " joined");
+                            break;
+                        case 'leave':
+                            log( 'Server', message.user.playerName + " left");
+                            break;
+                        case 'rename':
+                            log( 'Server', message.oldName + " renamed to " + message.from.playerName);
+                            break;
+                        case 'broadcast':
+                            log( message.from.playerName, message.msg.text);
+                            break;
+                        case 'you':
+                            handleYouMessage(message);
+                            break;
+                        default:
+                        log("Message", event.data);
+                    }
+            }
+
+            function buttonSendClick(event) {
+                var textBox = document.getElementById('textToSend');
+                if(!textBox.value) {
+                    log('Info','Enter some text before pressing send!');
+                    return;
+                }
+                var msg = {type:'broadcast',text:textBox.value};
+                socket.send( JSON.stringify(msg,null,'  '));
+                textBox.value = '';
+            }
+
+            function buttonSetNameClick(event) {
+                var textBox = document.getElementById('textUsername');
+                var msg = {type:'rename',playerName:textBox.value};
+                socket.send( JSON.stringify(msg,null,'  '));
+                localStorage.setItem('PlayerName',textBox.value )
+                
+            }
+
+            //Helper to trip the user pressing return and execute a function
+            function addDefaultAction(textBox, action ) {
+                textBox.addEventListener("keyup", function(event) {
+                    if (event.key === "Enter") {
+                        action();
+                    }
+                });
+            }
+
+            function onload() {
+
+                playerName = localStorage.getItem('PlayerName');
+                console.log('Logging with suggested player name : ' + playerName);
+
+                var wsURL = (window.location.protocol === 'http:' ? 'ws:' : 'wss:') +window.location.host ;
+                if( playerName ) {
+                    wsURL += '?playerName=' + encodeURIComponent(playerName);
+                }
+
+                log("Info", "Connecting to " + wsURL );
+                socket = new WebSocket(wsURL);
+                socket.addEventListener('open', onWSConnected);
+                socket.addEventListener('message', onWSMessage);
+                socket.addEventListener('close', onWSClose);
+
+                var buttonSend = document.getElementById('buttonSend');
+                buttonSend.addEventListener('click', buttonSendClick);
+
+                var textToSend = document.getElementById('textToSend');
+                addDefaultAction(textToSend, buttonSendClick);
+                textToSend.focus();
+
+                addDefaultAction(document.getElementById('textUsername'), buttonSetNameClick);
+                //textToSend.focus();
+
+            }
+
+            window.addEventListener('load',onload);
+
+
+        </script>
+    </head>
+    <body>
+        <div id="header">
+            Your Name : <input type="text" id="textUsername" size="50" value="Ed" />
+        </div>
+
+        <div id="messages">
+            <!-- Messages get inserted here!-->
+        </div>
+
+        <div id="footer">
+            You : <input type="text" id="textToSend" size="50" value=""/>
+            <input type="button" id="buttonSend" value="Send" />
+        </div>
+    
+        </body>
+</html>
