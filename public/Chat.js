@@ -1,38 +1,26 @@
 'use strict';
 
-
-
 var chatWindow = new ChatWindow();
 
-var listener = {
-    server_Log: function(actor,content) {
-        chatWindow.log(actor,content);
-    }
-}
-
-var serverConnection = new ServerConnection(listener);
-
- function buttonSendClick(event) {
+function buttonSendClick(event) {
     var textBox = document.getElementById('textToSend');
-    if(!textBox.value) {
-        log('Info','Enter some text before pressing send!');
+    if (!textBox.value) {
+        console.log('Info', 'Enter some text before pressing send!');
         return;
     }
-    var msg = {type:'broadcast',text:textBox.value};
-    serverConnection.sendMessage(msg);
+    //var msg = { type: 'broadcast', text: textBox.value };
+    chatWindow.sendMessage(textBox.value);
     textBox.value = '';
 }
 
 function buttonSetNameClick(event) {
     var textBox = document.getElementById('textUsername');
-    var msg = {type:'rename',playerName:textBox.value};
-    serverConnection.sendMessage(msg);
-    localStorage.setItem('PlayerName',textBox.value )
+    chatWindow.setMyName(textBox.value);
 }
 
 //Helper to trip the user pressing return and execute a function
-function addDefaultAction(textBox, action ) {
-    textBox.addEventListener("keyup", function(event) {
+function addDefaultAction(textBox, action) {
+    textBox.addEventListener("keyup", function (event) {
         if (event.key === "Enter") {
             action();
         }
@@ -41,15 +29,7 @@ function addDefaultAction(textBox, action ) {
 
 function onload() {
 
-    const playerName = localStorage.getItem('PlayerName');
-    console.log('Logging with suggested player name : ' + playerName);
-
-    var wsURL = (window.location.protocol === 'http:' ? 'ws:' : 'wss:') +window.location.host ;
-    if( playerName ) {
-        wsURL += '?playerName=' + encodeURIComponent(playerName);
-    }
-
-    serverConnection.connect(wsURL);
+    chatWindow.connect();
 
     var buttonSend = document.getElementById('buttonSend');
     buttonSend.addEventListener('click', buttonSendClick);
@@ -61,5 +41,5 @@ function onload() {
     addDefaultAction(document.getElementById('textUsername'), buttonSetNameClick);
 }
 
-window.addEventListener('load',onload);
+window.addEventListener('load', onload);
 

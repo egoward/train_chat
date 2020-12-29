@@ -70,7 +70,7 @@ State of the world, typically set by the first player:
 
 ### Insert into chat history
 ```json
-{"type":"action", "action":"list_insert", "id":"ChatHistory", "value":{"actor":"User2", "message":"I'm OK"}}
+{"type":"action", "list_insert":{"ChatHistory":[{"actor":"User2", "message":"I'm OK"}]}}
 ->
-{"type":"action","list_insert":{"ChatHistory":{"actor":"User2", "message":"I'm OK"}}
+{"type":"action","list_insert":{"ChatHistory":[{"actor":"User2", "message":"I'm OK"}]}}
 ```

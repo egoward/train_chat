@@ -60,7 +60,8 @@ class Connection {
 
   on_action(messageObj) {
     var objects = this.relayServer.objects;
-    var broadcast = {type:'action','create':{},'update':{},'delete':{}, from: this.getUserJSON()};
+    var broadcast = {type:'action','create':{},'update':{},'delete':{}, 'list_insert':{}, from: this.getUserJSON()};
+
     for (var key in messageObj.create) {
       console.log("Create " + key);
       if (key in objects) {
@@ -93,7 +94,28 @@ class Connection {
       broadcast.delete[key] = null;
     }
 
-    this.relayServer.broadcast(broadcast);
+    for (var key in messageObj.list_insert) {
+      console.log("List insert " + key);
+      if (!key in objects) {
+        console.log("Ignore list insert of " + key + " as it does not exist");
+        continue;
+      }
+      var serverArray = objects[key];
+      if (!Array.isArray(serverArray)) {
+        console.log("Ignore list insert of " + key + " as it is not an arrya");
+        continue;
+      }
+
+      var objectsToInsert = messageObj.list_insert[key];
+      for(var item of objectsToInsert) {
+        serverArray.push(item);
+      }
+      broadcast.list_insert[key] = objectsToInsert;
+    }
+
+    var ignoredSender = messageObj.broadcast_to_sender ? null : this;
+
+    this.relayServer.broadcast(broadcast, ignoredSender);
 
   }
 
@@ -135,11 +157,13 @@ class RelayServer {
     this.wss = null;
   }
 
-  broadcast(msg) {
+  broadcast(msg, ignoredSender) {
     var msgText = JSON.stringify(msg);
     this.wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(msgText);
+        if( client != ignoredSender ) {
+          client.send(msgText);
+        }
       }
     });
   }

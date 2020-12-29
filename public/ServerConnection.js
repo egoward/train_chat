@@ -59,35 +59,51 @@ class ServerConnection {
 
     handleAction(message) {
         var isMe = (this.userMe.uniqueID === message.from.uniqueID);
-        if (isMe) {
-            console.log("Ignoring action that we sent.")
-            return;
-        }
 
         for (var key in message.create) {
-            if (key in objects) {
+            if (key in this.sharedObjects) {
                 console.log("Ignore creation of " + key + " as it already exsits.");
                 continue;
             }
-            var obj = messageObj.create[key];
-            objects[key] = obj;
+            var obj = message.create[key];
+            this.sharedObjects[key] = obj;
         }
 
         for (var key in message.update) {
-            if (!key in objects) {
+            if (!key in this.sharedObjects) {
                 console.log("Ignore change to " + key + " as it does not exit.");
                 continue;
             }
             var obj = message.update[key];
-            objects[key] = obj;
+            this.sharedObjects[key] = obj;
         }
 
         for (var key in message.delete) {
-            if (!key in objects) {
+            if (!key in this.sharedObjects) {
                 console.log("Ignore delete of " + key + " as it does not exit.");
                 continue;
             }
-            delete objects[key];
+            delete this.sharedObjects[key];
+        }
+
+        for (var key in message.list_insert) {
+            if (!key in this.sharedObjects) {
+                console.log("Ignore list_insert of " + key + " as it does not exit.");
+                continue;
+            }
+
+            var array = this.sharedObjects[key];
+            if (!Array.isArray(array)) {
+              console.log("Ignore list insert of " + key + " as it is not an arrya");
+              continue;
+            }
+            var objectsToInsert = message.list_insert[key];
+            for(var item of objectsToInsert) {
+                array.push(item);
+            }
+            if(this.listener && this.listener.on_list_insert) {
+                this.listener.on_list_insert(key, objectsToInsert);
+            }
         }
     }
 
@@ -141,6 +157,16 @@ class ServerConnection {
         for (var key of keys) {
             msg.update[key] = this.sharedObjects[key];
         }
+        this.sendMessage(msg);
+    }
+
+    begin_list_insert(key, value, broadcast_to_sender) {
+        var array = this.sharedObjects[key];
+        if(!Array.isArray(array)) {
+            throw new Error("Attempting to add to something that isn't an array");
+        }
+        var msg = {type:'action',list_insert:{}, broadcast_to_sender}
+        msg.list_insert[key] = [value];
         this.sendMessage(msg);
     }
 
