@@ -1,0 +1,8 @@
+body {background-color: powderblue; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+#header { position:absolute; left:8px;right:8px; height:32px;top:8px; border-style:groove; }
+#messages { position:absolute; left:8px;right:8px; top:48px; bottom:48px; border-style:groove; overflow-y: scroll;}
+#footer {  position:absolute; left:8px;right:8px; height:32px; bottom:8px; border-style:groove;}
+
+#messages .message {background-color: lightyellow;}
+#messages .message .actor { font-weight:bold;}
+#messages .message .content {font-style:italic;}

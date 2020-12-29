@@ -7,11 +7,26 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Server",
             "skipFiles": [
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "name": "Chat Client",
+            "type": "edge",
+            "request": "launch",
+            "version": "beta",
+            "url": "http://localhost:8080/chat.html",
+            "webRoot": "${workspaceFolder}/public",
+
         }
-    ]
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": ["Server", "Chat Client"]
+        }
+    ]    
 }
