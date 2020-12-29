@@ -4,11 +4,15 @@
 
 var chatWindow = new ChatWindow();
 
-var serverConnection = new ServerConnection(function(actor,content) {
-    chatWindow.log(actor,content);
-} );
+var listener = {
+    server_Log: function(actor,content) {
+        chatWindow.log(actor,content);
+    }
+}
 
-function buttonSendClick(event) {
+var serverConnection = new ServerConnection(listener);
+
+ function buttonSendClick(event) {
     var textBox = document.getElementById('textToSend');
     if(!textBox.value) {
         log('Info','Enter some text before pressing send!');

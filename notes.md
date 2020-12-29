@@ -45,32 +45,32 @@ State of the world, typically set by the first player:
 
 ## Actions
 
-### Insert into chat history
-```json
-{"action":"list_insert", "id":"ChatHistory", "value":{"actor":"User2", "message":"I'm OK"}}
-->
-{"type":"broadcast","list_insert":{"ChatHistory":{"actor":"User2", "message":"I'm OK"}}
-```
 
-### Set ball location
-```json
-{"action":"set", "id":"ball", "type":"json", "value":{"x":"123","y":"456"}}
-->
-{"type":"broadcast","changes":{"ball":{"x":"123","y":"456"}} }
-```
 
 ### Create new item
 ```json
-{"action":"create", "id":"ball1235", "type":"json", "value":{"x":"123","y":"456"}}
+{"type":"action", "create":{"ball1235":{"x":"123","y":"456"}}}
 ->
-{"type":"broadcast","create":{"ball1235":{"type":"json", "value":{"x":"123","y":"456"}} }}
+{"type":"action","create":{"ball1235":{"x":"123","y":"456"}} }
+```
 
+### Change an item (ignore if it doesn't exist, it was probably deleted)
+```json
+{"type":"action", "update":{"ball":{"x":"123","y":"456"}}}
+->
+{"type":"action","update":{"ball":{"x":"123","y":"456"}} }
 ```
 
 ### Delete an object
 ```json
-{"action":"delete", "id":"ball1235"}
+{"type":"action", "delete":{"ball1235":null}}
 ->
-{"type":"broadcast","delete":{"ball1235":null}}
+{"type":"action","delete":{"ball1235":null}}
 ```
 
+### Insert into chat history
+```json
+{"type":"action", "action":"list_insert", "id":"ChatHistory", "value":{"actor":"User2", "message":"I'm OK"}}
+->
+{"type":"action","list_insert":{"ChatHistory":{"actor":"User2", "message":"I'm OK"}}
+```

@@ -11,7 +11,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\server.js"
+            "program": "${workspaceFolder}\\server\\index.js"
         },
         {
             "name": "Chat Client",
@@ -21,12 +21,27 @@
             "url": "http://localhost:8080/chat.html",
             "webRoot": "${workspaceFolder}/public",
 
+        },
+        {
+            "name": "Pong",
+            "type": "edge",
+            "request": "launch",
+            "version": "beta",
+            "url": "http://localhost:8080/pong/",
+            "webRoot": "${workspaceFolder}/public",
+
         }
+
     ],
     "compounds": [
         {
-            "name": "Server/Client",
+            "name": "Server/Chat Client",
             "configurations": ["Server", "Chat Client"]
+        },
+        {
+            "name": "Server/Pong",
+            "configurations": ["Server", "Pong"]
         }
+
     ]    
 }
