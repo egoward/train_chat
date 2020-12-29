@@ -24,12 +24,12 @@ class Connection {
 
     this.uniqueID = req.socket.remoteAddress + ':' + this.ws._socket.remotePort;
 
-    this.relayServer.users.push(this);
+    this.relayServer.users[this.uniqueID] = this;
 
     var yourInfo = {
       type: 'initial_state',
       user: this.getUserJSON(),
-      users: this.relayServer.users.map(x => x.getUserJSON()),
+      users: this.relayServer.getUsersJSON(),
       objects: this.relayServer.objects
     };
     this.ws.send(JSON.stringify(yourInfo, null, '  '));
@@ -51,11 +51,8 @@ class Connection {
       type: 'leave',
       user: this.getUserJSON()
     });
-    var index = this.relayServer.users.findIndex(user => user.ws === this.ws);
-    if (index < 0) {
-      throw new Error("Unable to locate user who closed web socket");
-    }
-    this.relayServer.users.splice(index, 1);
+
+    delete this.relayServer.users[ this.uniqueID ];
   }
 
   on_action(messageObj) {
@@ -152,7 +149,7 @@ class Connection {
 class RelayServer {
   constructor() {
     this.objects = {};
-    this.users = [];
+    this.users = {};
     this.nextPlayerNumber = 1;
     this.wss = null;
   }
@@ -173,6 +170,9 @@ class RelayServer {
     this.wss.on('connection', this.connect.bind(this));
   }
 
+  getUsersJSON() {
+    return Object.fromEntries( Object.entries(this.users).map(([id,user])=>[id,user.getUserJSON()]))    
+  }
 
   connect(ws, req) {
     var connection = new Connection(this, ws, req);

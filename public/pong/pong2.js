@@ -37,7 +37,7 @@ function startNewGame() {
         var direction = 2 * Math.PI * Math.random();
         objects.ball.v = {x:Math.cos(direction) * speed, y:Math.sin(direction)*speed};
     }
-    serverConnection.broadcastChanges(['ball','score','player1','player2'])
+    serverConnection.broadcastChanges(['ball','score','player1','player2'],true)
 }
 
 function goFaster() {
@@ -92,7 +92,7 @@ function moveBall(o,t) {
     if( playerName == 'player2') {
         if( pNew.x - o.size < 0 ) {
             player2.score++;
-            serverConnection.sendMessage( { type:"broadcast", text:"Player 2 scored a point"});
+            serverConnection.sendMessage( { type:"broadcast", text:"Player 2 scored a point  Score:" + player1.score + '-' + player2.score});
             startNewGame();
         }
     }
@@ -100,7 +100,7 @@ function moveBall(o,t) {
     if( playerName == 'player1') {
         if( pNew.x + o.size > gameSize.x ) {
             player1.score++;
-            serverConnection.sendMessage( { type:"broadcast", text:"Player 1 scored a point"});
+            serverConnection.sendMessage( { type:"broadcast", text:"Player 1 scored a point.  Score:"+ player1.score + '-' + player2.score});
             startNewGame();
         }    
     }
@@ -243,27 +243,54 @@ class Pong {
         }
         
         serverConnection.createAndSendObjects(defaultObjects);
+        var userArray = Object.values(msg.users);
 
-        if( msg.users.length == 1 ) {
+        if( userArray.length == 1 ) {
             console.log("First player - taking player 1")
-            objects.player1.playerid = msg.users[0].uniqueID;
+            objects.player1.playerid = userArray[0].uniqueID;
+            objects.player2.playerid = null;
             startNewGame();
-        } else if(msg.users.length ==2 ) {
+        } else if(userArray.length >=2 ) {
             console.log("Second player - taking player 2")
-            objects.player1.playerid = msg.users[0].uniqueID;
-            objects.player2.playerid = msg.users[1].uniqueID;
+            objects.player1.playerid = userArray[0].uniqueID;
+            objects.player2.playerid = userArray[1].uniqueID;
             startNewGame();
         } else {
             console.log("Too many users already")
         }
         this.objects = serverConnection.sharedObjects;
+        this.updateScoreboard();
         resize();
+    }
+
+    updateScoreboard() {
+        console.log("Updating scoreboard to " + objects.player1.score + '-' + objects.player2.score );
+
+        const formatUser = function(player) {
+            if(!this.serverConnection || !this.serverConnection.users)
+                return '?';
+            var user = this.serverConnection.users[player.playerid];
+            var playerName = user?user.playerName : "Unknown"
+            if(player.playerid == serverConnection.userMe.uniqueID) {
+                playerName += " (You)";
+            }
+            return playerName + " : " + player.score;
+        }.bind(this);
+
+        var header = document.getElementById('header');
+        header.innerText = formatUser(objects.player1) + "    " + formatUser(objects.player2);
+    }
+
+    on_update(key,obj) {
+        if( key === 'score' ) {
+            this.updateScoreboard();
+        }
     }
 }
 
 var pong = new Pong();
-
 var serverConnection = new ServerConnection(pong);
+pong.serverConnection = serverConnection;
 
 function onload() {
     // serverConnection.connect("ws:18.133.204.125:8080?playerName=New");
