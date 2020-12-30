@@ -12,8 +12,7 @@ const app = express();
 
 app.get('/users', (req,res) => {
   res.contentType('application/json');
-  var ret = relayServer.users.map( RelayServer.getUserJSON );
-  res.send( JSON.stringify(ret,null,'  '));
+  res.send( JSON.stringify(relayServer.getUsersJSON(),null,'  '));
 })
 
 app.use(express.static('public'))

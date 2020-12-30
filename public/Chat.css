@@ -6,3 +6,8 @@ body {background-color: powderblue; font-family: 'Segoe UI', Tahoma, Geneva, Ver
 #messages .message {background-color: lightyellow;}
 #messages .message .actor { font-weight:bold;}
 #messages .message .content {font-style:italic;}
+
+.popup {position:absolute; left:32px;top:48px; right:32px; bottom:48px; background: lightblue; border-style:solid;}
+.popup .popupTitle {position:absolute; left:0px;top:0px; right:0px; height:28px; background:black;color:white;}
+.popup .popupClose {position:absolute; top:4px; width:20px; right:4px; height:28px; font-size:14px;cursor: pointer;}
+.popup .popupBody {position:absolute; left:20px; right:20px; top: 48px; bottom:20px;}

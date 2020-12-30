@@ -41,12 +41,6 @@ class ChatWindow {
         this. sendMessageWithActor( this.serverConnection.userMe.playerName, text);
     }
 
-    setMyName(newName) {
-        var msg = {type:'rename',playerName:textBox.value};
-        this.serverConnection.sendMessage(msg);
-        localStorage.setItem('PlayerName',textBox.value )
-    }
-
     server_Log(actor,content) {
         console.log( actor, content);
     }
@@ -72,6 +66,9 @@ class ChatWindow {
         if( key == "messages") {
             this.refreshMessages();
         }
+    }
+
+    on_user_list_change() {
     }
 
 }

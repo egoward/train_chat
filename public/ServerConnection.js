@@ -4,15 +4,19 @@ class ServerConnection {
         this.socket = null;
         this.userMe = null;
         this.users = null;
-        this.listener = listener;
+        this.listeners = [listener];
         this.sharedObjects = {}
     }
 
     log(actor, content) {
-        if (this.listener && this.listener.server_Log) {
-            this.listener.server_Log(actor, content);
-        } else {
+        if(this.listeners.length == 0 ) {
             console.log(actor, content);
+        } else {
+            for(var listener of this.listeners ) {
+                if(listener.server_Log) {
+                    listener.server_Log(actor, content);
+                }
+            }
         }
     }
 
@@ -46,16 +50,22 @@ class ServerConnection {
 
         this.sharedObjects = msg.objects;
 
-        if (this.listener && this.listener.server_login) {
-            this.listener.server_login(msg);
+        for(var listener of this.listeners ) {
+            if (listener.server_login) {
+                listener.server_login(msg);
+            }
         }
     }
 
     handleBroadcast(message) {
         var isMe = (this.userMe.uniqueID === message.from.uniqueID);
-        if (this.listener && this.listener.server_broadcast) {
-            this.listener.server_broadcast(message, isMe);
+
+        for(var listener of this.listeners ) {
+            if (this.listener.server_broadcast) {
+                listener.server_broadcast(message, isMe);
+            }
         }
+
         if (message.msg.text) {
             this.log(message.from.playerName + (isMe ? ' (you)' : ''), message.msg.text);
         }
@@ -83,10 +93,13 @@ class ServerConnection {
                 this.sharedObjects[key] = obj;
     
             }
-            if(this.listener && this.listener.on_update) {
-                for (var key in message.update) {
-                    var obj = message.update[key];
-                    this.listener.on_update(key, obj);
+            for (var key in message.update) {
+                var obj = message.update[key];
+
+                for(var listener of this.listeners ) {
+                    if (listener.on_update) {
+                        listener.on_update(key,obj);
+                    }
                 }
             }
         }
@@ -114,10 +127,24 @@ class ServerConnection {
             for(var item of objectsToInsert) {
                 array.push(item);
             }
-            if(this.listener && this.listener.on_list_insert) {
-                this.listener.on_list_insert(key, objectsToInsert);
+            for(var listener of this.listeners ) {
+                if (listener.on_list_insert) {
+                    listener.on_list_insert(key, objectsToInsert);
+                }
             }
         }
+    }
+
+    //We'll group add / modify / remove into a single 'change' event
+    handleUserListChange() {
+        //UserMe should be updated to reflect current state
+        this.userMe = this.users[ this.userMe.uniqueID ];
+
+        for(var listener of this.listeners ) {
+            if (listener.on_user_list_change) {
+                listener.on_user_list_change();
+            }
+        }        
     }
 
     onWSMessage(event) {
@@ -133,14 +160,17 @@ class ServerConnection {
             case 'join':
                 this.users[ message.user.uniqueID ] = message.user;
                 this.log('Server', message.user.playerName + " joined");
+                this.handleUserListChange();
                 break;
             case 'leave':
                 delete this.users[ message.user.uniqueID ];
                 this.log('Server', message.user.playerName + " left");
+                this.handleUserListChange();
                 break;
             case 'rename':
-                this.users[ message.user.uniqueID ] = message.user;
+                this.users[ message.from.uniqueID ] = message.from;
                 this.log('Server', message.oldName + " renamed to " + message.from.playerName);
+                this.handleUserListChange();
                 break;
             case 'broadcast':
                 this.handleBroadcast(message);
@@ -154,6 +184,10 @@ class ServerConnection {
             default:
                 this.log("Message", event.data);
         }
+    }
+
+    changeUsername(newUsername) {
+        this.sendMessage({type:"rename", playerName:newUsername})
     }
 
     sendMessage(msg) {
@@ -185,6 +219,5 @@ class ServerConnection {
         msg.list_insert[key] = [value];
         this.sendMessage(msg);
     }
-
 }
 
