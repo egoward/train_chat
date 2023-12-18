@@ -15,7 +15,9 @@ app.get('/users', (req,res) => {
   res.send( JSON.stringify(relayServer.getUsersJSON(),null,'  '));
 })
 
-app.use(express.static('public'))
+const path1=__dirname+'/../public'
+console.log('Serving files from ', path1)
+app.use('/',express.static(path1, {index:'index.html'}))
 const httpServer = http.createServer(app);
 
 relayServer.init();
@@ -27,6 +29,6 @@ httpServer.on('upgrade', function upgrade(request, socket, head) {
 });
 
 const port = 8080;
-httpServer.listen(port, () => {
+httpServer.listen(port, '0.0.0.0', () => {
   console.log(`Relay server listening at http://localhost:${port}`)
 })

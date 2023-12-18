@@ -30,7 +30,7 @@ class Popup {
                 action();
             }
         });
-    }    
+    }
 }
 
 class PopupUsers extends Popup {
@@ -54,7 +54,7 @@ class PopupUsers extends Popup {
     populateContent() {
         var html = "<h2>User settings</h2><br />" +
         "<p>Username:  <input type=text id=textNewUsername size=30 />" +
-        "  <input type=button id=buttonChangeUsername value=Change Name /></p>";
+        "  <input type=button id=buttonChangeUsername/></p>";
 
         html+= "Current users:<hr/>"
         html+= '<table style="border:1px solid black;border-collapse: collapse;"><th>ID</th><th>Name</th><th>ReadyState</th>\n'
