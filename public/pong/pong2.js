@@ -293,8 +293,11 @@ var serverConnection = new ServerConnection(pong);
 pong.serverConnection = serverConnection;
 
 function onload() {
+    var wsURL = (window.location.protocol === 'http:' ? 'ws:' : 'wss:') +window.location.host + '?playerName=New';
+
     // serverConnection.connect("ws:18.133.204.125:8080?playerName=New");
-    serverConnection.connect("ws:localhost:8080?playerName=New");
+    //serverConnection.connect("ws:localhost:8080?playerName=New");
+    serverConnection.connect(wsURL);
     resize();
 
     window.requestAnimationFrame(animationFrame);
